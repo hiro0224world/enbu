@@ -414,6 +414,15 @@ negative: background, scenery, multiple views, extra limbs, weapon raised, dynam
   1x1 の透明 PNG に差し替えて 3 体で約 4MB 減らした（31.4MB → 27.4MB）。**見た目は一切変わらない**
   - 画像の要素ごと消すと images / textures の番号がずれて他の参照が壊れる。**中身だけ差し替えて番号は残すこと**
   - bufferView を順に詰め直して byteOffset / byteLength を振り直す。4 バイト境界に揃える
+  - **2026-09-15 に不具合が発覚して修正**: 差し替えに使った 1x1 PNG を**バイト列の手書き**で入れていて、
+    IDAT の CRC が誤り・IEND も欠けていた。ブラウザは見逃すので炎舞は動いていたが、Blender（libpng）が
+    `IDAT: CRC error` で読めなかった。3 体とも同じ 1 枚（サムネイル枠）だけが壊れていた。
+    いまは PNG を zlib で組み立て、**書き出す前に全 PNG の署名・CRC・終端を検査し、1 枚でも壊れていたら書かない**
+    （`verify_all_pngs`）。**バイナリを手で書かないこと**
+  - 修正後の確認で**開発サーバーを別フォルダ（C:\Users\yagih\Apps）で起動してしまい**、表示確認が空振りした。
+    作業フォルダの残留で、ComfyUI 側の失敗台帳 E1 と同型。**`npm run dev` は起動先を明示する**
+    （PowerShell なら `Start-Process -WorkingDirectory C:\Users\yagih\enbu`）。
+    撮影前に `curl localhost:5173` が 200 を返すことを必ず確かめ、000 のまま撮った画面の「エラー0件」を確認扱いにしない
 - さらに減らすなら VRoid の書き出しでテクスチャ統合とポリゴン削減。ただし
   **テクスチャ統合はマテリアルをまとめるので、ボスの服を染める `setClothTint`（名前に CLOTH を含むものだけ対象）が壊れる**。
   やるならこちらも作り直しが要る
